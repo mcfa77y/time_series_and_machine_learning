@@ -5,7 +5,7 @@
 # ## setup imports
 # 
 
-# In[30]:
+# In[3]:
 
 
 import numpy as np
@@ -20,10 +20,16 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM
 
 import datetime as dt
 
+import plotly
+import chart_studio.plotly as py
+import plotly.tools as tls
+import plotly.express as px
+import plotly.graph_objects as go
+
 
 # # Utils
 
-# In[31]:
+# In[4]:
 
 
 def list_to_np_array(tmp_list, label=""):
@@ -35,10 +41,11 @@ def list_to_np_array(tmp_list, label=""):
 
 # ### constants
 
-# In[32]:
+# In[5]:
 
 
-company = 'FIVE_GUYS_BURGERS_AND_FRIES'
+#  call these brands since they are agregated info
+company = 'BURGER_KING'
 ROW_AXIS = 0
 COL_AXIS = 1
 
@@ -46,7 +53,7 @@ COL_AXIS = 1
 # ## Load Data
 # 
 
-# In[33]:
+# In[6]:
 
 
 start = dt.datetime(2020, 4, 1)
@@ -67,9 +74,15 @@ train_company_data = train_data[company]
 # train_data_close = train_data[CLOSE].values.reshape(-1,1)
 
 
+# In[7]:
+
+
+data
+
+
 # ## Prepare Data
 
-# In[34]:
+# In[8]:
 
 
 # scale date to fit between 0 - 1
@@ -107,7 +120,7 @@ y_train = np.array(y_train)
 
 # ## Build model
 
-# In[35]:
+# In[9]:
 
 
 model = Sequential()
@@ -125,13 +138,13 @@ model.add(Dropout(0.2))
 
 model.add(Dense(units=1)) # predict the closing price
 
-model.compile(optimizer="adam", loss="mean_squared_error", metrics=[RootMeanSquaredError(name="my_acc")])
-model.fit(x_train, y_train, epochs=55, batch_size=32)
+model.compile(optimizer="adam", loss="mean_squared_error", metrics=[RootMeanSquaredError(name="rmse")])
+model.fit(x_train, y_train, epochs=25, batch_size=32)
 
 
 # ## Load test data
 
-# In[47]:
+# In[10]:
 
 
 test_start = dt.datetime(2020,1,1)
@@ -164,7 +177,7 @@ model_inputs = scalar.transform(model_inputs)
 
 # ## Make predictions on test data
 
-# In[60]:
+# In[11]:
 
 
 x_test = []
@@ -180,7 +193,7 @@ predicted_prices = model.predict(x_test)
 predicted_prices = scalar.inverse_transform(predicted_prices)
 
 
-# In[62]:
+# In[12]:
 
 
 np.shape(x_test_date)
@@ -188,7 +201,7 @@ np.shape(x_test_date)
 
 # ## Plot test predictions
 
-# In[64]:
+# In[13]:
 
 
 predicted_prices_length = predicted_prices.size
@@ -197,13 +210,13 @@ x_range = np.linspace(0, predicted_prices_length, predicted_prices_length)
 
 fig.add_trace(go.Scatter(name="predicted", x=x_test_date, y=predicted_prices.reshape(predicted_prices_length)))
 fig.add_trace(go.Scatter(name="actual", x=x_test_date, y=y_test.reshape(predicted_prices_length)))
-fig.update_layout(title=company, xaxis_title="time", yaxis_title=f"{company} price")
+fig.update_layout(title=f'{company} (LSTM)', xaxis_title="time", yaxis_title=f"{company} price")
 fig.show()
 
 
 # ## Predict next day
 
-# In[42]:
+# In[14]:
 
 
 row_selection = len(model_inputs) + 1 - prediction_days
@@ -212,13 +225,16 @@ real_data = [model_inputs[row_selection: col_selection, 0]]
 real_data = list_to_np_array(real_data, "real_data")
 
 prediction = model.predict(real_data)
-prediction = scalar.inverse_transform(prediction)
-print(f"Prediction for {test_end}: {prediction}")
+prediction = scalar.inverse_transform(prediction)[0][0]
+
+prediction_str = "{:0.2f}".format(prediction)
+test_end_str = test_end.strftime("%m-%d-%Y")
+print(f"Prediction for {test_end_str}:  visits {prediction_str}")
 
 
 # ## RMSE how good is it?
 
-# In[45]:
+# In[15]:
 
 
 se = np.square(y_test - predicted_prices)
@@ -226,6 +242,20 @@ mse = np.mean(se)
 rmse = np.sqrt(mse)
 rmse_str = "{:0.2f}".format(rmse)
 print(f'RMSE: {rmse_str}')
+
+# update rmse calc for looking at the last 100 days 
+
+
+# ## RMSE: last 100 days
+
+# In[16]:
+
+
+se = np.square(y_test[-100:] - predicted_prices[-100:])
+mse = np.mean(se)
+rmse = np.sqrt(mse)
+rmse_str = "{:0.2f}".format(rmse)
+print("rmse: " + rmse_str)
 
 
 # In[ ]:

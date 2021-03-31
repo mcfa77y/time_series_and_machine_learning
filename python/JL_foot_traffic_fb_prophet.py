@@ -5,7 +5,7 @@
 # ## setup imports
 # 
 
-# In[1]:
+# In[41]:
 
 
 import numpy as np
@@ -23,7 +23,7 @@ import datetime as dt
 from fbprophet import Prophet
 
 
-# In[2]:
+# In[42]:
 
 
 CLOSE = 'Close'
@@ -31,7 +31,7 @@ ROW_AXIS = 0
 COL_AXIS = 1
 
 
-# In[3]:
+# In[43]:
 
 
 df = pd.read_csv('/Users/joe.lau/Downloads/bar.csv')
@@ -45,7 +45,7 @@ df.head()
 
 
 
-# In[4]:
+# In[44]:
 
 
 m = Prophet()
@@ -53,7 +53,7 @@ m.add_seasonality(name='monthly', period=30.5, fourier_order=5)
 m.fit(df)
 
 
-# In[27]:
+# In[45]:
 
 
 # place holder for future predictions
@@ -63,13 +63,13 @@ future = m.make_future_dataframe(periods=days_to_predict)
 forcast = m.predict(future)
 
 
-# In[21]:
+# In[46]:
 
 
 forcast[["ds", "yhat_lower", "yhat_upper", "yhat"]].tail(7)
 
 
-# In[28]:
+# In[47]:
 
 
 from fbprophet.plot import plot_plotly
@@ -80,13 +80,13 @@ py.plot(fig, filename=f"{company}.html")
 fig.show()
 
 
-# In[29]:
+# In[48]:
 
 
 m.plot_components(forcast);
 
 
-# In[30]:
+# In[49]:
 
 
 from fbprophet.plot import add_changepoints_to_plot
@@ -96,7 +96,7 @@ a = add_changepoints_to_plot(fig.gca(), m, forcast)
 
 # ## RMSE: how good is it
 
-# In[31]:
+# In[50]:
 
 
 
@@ -110,18 +110,12 @@ print("rmse: " + rmse_str)
 
 # ## RMSE: last 100 days
 
-# In[32]:
+# In[68]:
 
 
-se = np.square(forcast.loc[:, 'yhat'][-100:] - df['y'][-100:])
+se = np.square(forcast.loc[:, 'yhat'][-100:].values - df['y'][-100:].values)
 mse = np.mean(se)
 rmse = np.sqrt(mse)
 rmse_str = "{:0.2f}".format(rmse)
 print("rmse: " + rmse_str)
-
-
-# In[ ]:
-
-
-
 

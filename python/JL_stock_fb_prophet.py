@@ -5,7 +5,7 @@
 # ## setup imports
 # 
 
-# In[35]:
+# In[1]:
 
 
 import numpy as np
@@ -26,7 +26,7 @@ from fbprophet import Prophet
 # ## Setup training data
 # 
 
-# In[84]:
+# In[2]:
 
 
 company = 'FB'
@@ -39,7 +39,7 @@ train_close_data = train_data[CLOSE]
 
 
 
-# In[86]:
+# In[3]:
 
 
 df = train_data['Close']
@@ -53,23 +53,23 @@ df.head()
 
 # ## setup model and predicitons
 
-# In[87]:
+# In[4]:
 
 
 m = Prophet()
 m.fit(df)
 
 
-# In[94]:
+# In[11]:
 
 
 # place holder for future predictions
-future = m.make_future_dataframe(periods=7*4)
+future = m.make_future_dataframe(periods=365)
 
 forcast = m.predict(future)
 
 
-# In[95]:
+# In[12]:
 
 
 forcast[["ds", "yhat_lower", "yhat_upper", "yhat"]].tail(7)
@@ -77,7 +77,7 @@ forcast[["ds", "yhat_lower", "yhat_upper", "yhat"]].tail(7)
 
 # ## plot actual vs predicted
 
-# In[104]:
+# In[13]:
 
 
 from fbprophet.plot import plot_plotly
@@ -95,13 +95,13 @@ fig.show()
 
 
 
-# In[97]:
+# In[14]:
 
 
 m.plot_components(forcast);
 
 
-# In[98]:
+# In[15]:
 
 
 from fbprophet.plot import add_changepoints_to_plot
@@ -111,7 +111,7 @@ a = add_changepoints_to_plot(fig.gca(), m, forcast)
 
 # ## RMSE: how good is it
 
-# In[99]:
+# In[16]:
 
 
 

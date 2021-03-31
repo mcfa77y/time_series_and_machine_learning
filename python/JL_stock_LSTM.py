@@ -5,7 +5,7 @@
 # ## setup imports
 # 
 
-# In[5]:
+# In[31]:
 
 
 import numpy as np
@@ -28,7 +28,7 @@ import plotly.express as px
 
 # # Utils
 
-# In[6]:
+# In[32]:
 
 
 def list_to_np_array(tmp_list, label=""):
@@ -40,7 +40,7 @@ def list_to_np_array(tmp_list, label=""):
 
 # ### constants
 
-# In[7]:
+# In[33]:
 
 
 CLOSE = 'Close'
@@ -51,10 +51,10 @@ COL_AXIS = 1
 # ## Load Data
 # 
 
-# In[8]:
+# In[59]:
 
 
-company = 'AAPL'
+company = 'FB'
 start = dt.datetime(2012, 1, 1)
 end = dt.datetime(2020, 1, 1)
 # end = dt.datetime.now() - dt.timedelta(days=1)
@@ -67,11 +67,11 @@ train_close_data = train_data[CLOSE]
 
 # ## Prepare Data
 
-# In[9]:
+# In[60]:
 
 
-# scale date to fit between 0 - 1
-scalar = MinMaxScaler(feature_range=(0,1))
+# scale date to fit between 0 -> 1 could try out 0.75 and see how that works
+scalar = MinMaxScaler(feature_range=(0,0.75))
 scaled_train_data = scalar.fit_transform(train_close_data.values.reshape(-1,1))
 print(f"scaled_train_data.shape: {scaled_train_data.shape}")
 
@@ -105,7 +105,7 @@ y_train = np.array(y_train)
 
 # ## Build model
 
-# In[10]:
+# In[61]:
 
 
 model = Sequential()
@@ -124,12 +124,20 @@ model.add(Dropout(0.2))
 model.add(Dense(units=1)) # predict the closing price
 
 model.compile(optimizer="adam", loss="mean_absolute_error", metrics=[RootMeanSquaredError()])
-model.fit(x_train, y_train, epochs=25, batch_size=32)
+history = model.fit(x_train, y_train, epochs=25, batch_size=32, validation_split=0.1, shuffle=False)
+
+
+# In[62]:
+
+
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.legend()
 
 
 # ## Load test data
 
-# In[11]:
+# In[63]:
 
 
 test_start = dt.datetime(2020,1,1)
@@ -161,11 +169,12 @@ model_inputs = scalar.transform(model_inputs)
 
 # ## Make predictions on test data
 
-# In[12]:
+# In[64]:
 
 
 x_test = []
 x_test_date = []
+# show the previous 30 days shown as input on the plot
 for x in range(prediction_days, len(model_inputs)):
     x_test.append(model_inputs[x-prediction_days:x, 0])
     x_test_date.append(model_inputs_date[x])
@@ -179,7 +188,7 @@ predicted_prices = scalar.inverse_transform(predicted_prices)
 
 # ## Plot test predictions
 
-# In[13]:
+# In[65]:
 
 
 import plotly.graph_objects as go
@@ -189,13 +198,13 @@ x_range = np.linspace(0, predicted_prices_length, predicted_prices_length)
 
 fig.add_trace(go.Scatter(name="predicted", x=x_test_date, y=predicted_prices.reshape(predicted_prices_length)))
 fig.add_trace(go.Scatter(name="actual", x=x_test_date, y=y_test.reshape(predicted_prices_length)))
-fig.update_layout(title=company, xaxis_title="time", yaxis_title=f"{company} price")
+fig.update_layout(title=f"{company} LSTM", xaxis_title="time", yaxis_title=f"{company} price")
 fig.show()
 
 
 # ## Predict next day
 
-# In[17]:
+# In[66]:
 
 
 row_selection = len(model_inputs) - prediction_days
@@ -212,7 +221,7 @@ print(f"Prediction for {test_end_str}: ${prediction_str}")
 
 # ## RMSE: how good is it
 
-# In[15]:
+# In[67]:
 
 
 se = np.square(y_test - predicted_prices)
